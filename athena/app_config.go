@@ -197,7 +197,13 @@ func WithRouterReturnProvider[T any](customReturnProvider func(w http.ResponseWr
 
 		app.typeScript.argumentTypesToIgnore[newType] = true
 		app.autoRouter.returnMapping[newType] = func(w http.ResponseWriter, r *http.Request, value reflect.Value) {
-			customReturnProvider(w, r, value.Interface().(T))
+			var typedValue T
+			i := value.Interface()
+			if i != nil {
+				typedValue = i.(T)
+			}
+
+			customReturnProvider(w, r, typedValue)
 		}
 
 		return nil
