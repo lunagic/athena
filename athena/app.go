@@ -23,6 +23,7 @@ func NewApp(
 ) {
 	// Build the service with the defaults
 	service := &App{
+		config:   config,
 		handlers: map[string]http.Handler{},
 		logger:   slog.Default(),
 		typeScript: typeScriptConfig{
