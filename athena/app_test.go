@@ -72,6 +72,7 @@ func TestApp(t *testing.T) {
 	ctx := t.Context()
 
 	config := athena.NewConfig()
+	config.AppHTTPPort = 0 // Make sure a random port is selected for each instance
 
 	queueDriver, err := queue.NewDriverMemory()
 	assert.NilError(t, err)
