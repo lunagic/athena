@@ -66,7 +66,7 @@ func (service *App) calculateTypeScript() error {
 				break
 			}
 
-			routes[""] = typescript.Route{
+			routes[method.Name] = typescript.Route{
 				Path:         fmt.Sprintf("%s?_method=%s", service.autoRouter.Prefix, "method name"),
 				Method:       httpMethod,
 				RequestBody:  httpRequest,
