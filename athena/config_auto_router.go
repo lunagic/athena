@@ -5,6 +5,8 @@ import (
 	"reflect"
 )
 
+const autoRouterQueryParamName = "method"
+
 type autoRouterConfig struct {
 	Prefix          string
 	Type            reflect.Type

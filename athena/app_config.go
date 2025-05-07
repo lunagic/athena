@@ -91,7 +91,7 @@ func WithRouter[T any](prefix string, router T, middlewares ...poseidon.Middlewa
 			app.autoRouter.Prefix,
 			poseidon.Middlewares(middlewares).Apply(
 				http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					methodString := r.URL.Query().Get("method")
+					methodString := r.URL.Query().Get(autoRouterQueryParamName)
 
 					// Confirm that the method name is in the interface
 					methodDef, found := app.autoRouter.Type.MethodByName(methodString)
