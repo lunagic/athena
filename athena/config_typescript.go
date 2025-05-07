@@ -70,7 +70,7 @@ func (service *App) calculateTypeScript() error {
 				Path:         fmt.Sprintf("%s?_method=%s", service.autoRouter.Prefix, "method name"),
 				Method:       httpMethod,
 				RequestBody:  httpRequest,
-				ResponseBody: service.autoRouter.Type.Out(0),
+				ResponseBody: method.Type.Out(0),
 			}
 		}
 	}

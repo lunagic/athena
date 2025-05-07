@@ -1,7 +1,10 @@
 package athena_test
 
 import (
+	"bytes"
 	"context"
+	"net/http"
+	"reflect"
 	"testing"
 	"time"
 
@@ -11,57 +14,55 @@ import (
 	"gotest.tools/v3/assert"
 )
 
-// type RouteTestInterface interface {
-// 	GetThing(w http.ResponseWriter, r *http.Request, userID string, shouldBeIgnored TestUser) TestUser
-// }
+type TestUser struct {
+	Username string
+}
 
-// type RouteTest struct{}
+type RouteTestInterface interface {
+	GetThing(w http.ResponseWriter, r *http.Request, userID string, shouldBeIgnored TestUser) TestUser
+}
 
-// func (RouteTest) GetThing(w http.ResponseWriter, r *http.Request, userID string, shouldBeIgnored TestUser) TestUser {
-// 	return TestUser{}
-// }
+type RouteTestStruct struct{}
 
-// func TestRouteInterface(t *testing.T) {
-// 	type TestStruct struct {
-// 		Timestamp string `json:"@timestamp"`
-// 		UpdatedAt time.Time
-// 		DeletedAt *time.Time
-// 		Timeout   time.Duration
-// 		Data      any
-// 		MoreData  interface{}
-// 	}
+func (RouteTestStruct) GetThing(w http.ResponseWriter, r *http.Request, userID string, shouldBeIgnored TestUser) TestUser {
+	return TestUser{}
+}
 
-// 	service := typescript.New(
-// 		typescript.WithRegistry(map[string]reflect.Type{
-// 			"TestStruct": reflect.TypeFor[TestStruct](),
-// 			"TestUser":   reflect.TypeFor[TestUser](),
-// 		}),
-// 		typescript.WithAutoRouter("/_backend", reflect.TypeFor[RouteTestInterface](), map[reflect.Type]bool{reflect.TypeFor[TestUser](): true}),
-// 	)
+func TestRouteInterface(t *testing.T) {
+	_, err := athena.NewApp(
+		t.Context(),
+		athena.NewConfig(),
+		athena.WithTypeScriptOutput(
+			bytes.NewBufferString(""),
+			map[string]reflect.Type{
+				"user": reflect.TypeFor[TestUser](),
+			},
+		),
+		athena.WithRouter[RouteTestInterface]("/_api",
+			RouteTestStruct{},
+		),
+	)
 
-// 	testThePackage(t, service)
-// }
+	assert.NilError(t, err)
+}
 
-// func TestRouteNonInterface(t *testing.T) {
-// 	type TestStruct struct {
-// 		Timestamp string `json:"@timestamp"`
-// 		UpdatedAt time.Time
-// 		DeletedAt *time.Time
-// 		Timeout   time.Duration
-// 		Data      any
-// 		MoreData  interface{}
-// 	}
+func TestRouteNonInterface(t *testing.T) {
+	_, err := athena.NewApp(
+		t.Context(),
+		athena.NewConfig(),
+		athena.WithTypeScriptOutput(
+			bytes.NewBufferString(""),
+			map[string]reflect.Type{
+				"user": reflect.TypeFor[TestUser](),
+			},
+		),
+		athena.WithRouter("/_api",
+			RouteTestStruct{},
+		),
+	)
 
-// 	service := typescript.New(
-// 		typescript.WithRegistry(map[string]reflect.Type{
-// 			"TestStruct": reflect.TypeFor[TestStruct](),
-// 			"TestUser":   reflect.TypeFor[TestUser](),
-// 		}),
-// 		typescript.WithAutoRouter("/_backend", reflect.TypeFor[RouteTest](), map[reflect.Type]bool{reflect.TypeFor[TestUser](): true}),
-// 	)
-
-// 	testThePackage(t, service)
-// }
+	assert.NilError(t, err)
+}
 
 func TestApp(t *testing.T) {
 	type User struct {
