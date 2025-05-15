@@ -11,6 +11,7 @@ import (
 	"github.com/lunagic/athena/athena/internal/agenda"
 	"github.com/lunagic/athena/athenaservices/cache"
 	"github.com/lunagic/athena/athenaservices/database"
+	"github.com/lunagic/poseidon/poseidon"
 )
 
 func NewApp(
@@ -71,6 +72,7 @@ type App struct {
 	databaseAutoMigrationEntities []database.Entity
 	database                      *database.Service
 	handlers                      map[string]http.Handler
+	middlewares                   poseidon.Middlewares
 }
 
 func (app *App) Start(ctx context.Context) error {

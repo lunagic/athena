@@ -48,6 +48,14 @@ func WithHandler(path string, handler http.Handler) AppConfigFunc {
 	}
 }
 
+func WithMiddlewares(middlewares poseidon.Middlewares) AppConfigFunc {
+	return func(service *App) error {
+		service.middlewares = middlewares
+
+		return nil
+	}
+}
+
 func WithDatabaseAutoMigration(db *database.Service, entities []database.Entity) AppConfigFunc {
 	return func(app *App) error {
 		app.database = db

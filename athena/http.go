@@ -10,7 +10,7 @@ func (service *App) buildHandler() error {
 		mux.Handle(path, handler)
 	}
 
-	service.httpHandler = mux
+	service.httpHandler = service.middlewares.Apply(mux)
 
 	return nil
 }
