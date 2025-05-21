@@ -129,6 +129,11 @@ func WithRouter[T any](prefix string, router T, middlewares ...poseidon.Middlewa
 							continue
 						}
 
+						if inType == reflect.TypeFor[context.Context]() {
+							in = append(in, reflect.ValueOf(r.Context()))
+							continue
+						}
+
 						overrideFunc, found := app.autoRouter.argumentMapping[inType]
 						if found {
 							value, err := overrideFunc(w, r)

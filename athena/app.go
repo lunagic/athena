@@ -96,6 +96,10 @@ func (app *App) Start(ctx context.Context) error {
 	}).Serve(listener)
 }
 
+func (app App) Handler() http.Handler {
+	return app.httpHandler
+}
+
 func (app App) backgroundTask(ctx context.Context) error {
 	if app.jobCacheDriver == nil {
 		return nil
