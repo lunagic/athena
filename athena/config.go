@@ -12,7 +12,7 @@ import (
 	"github.com/lunagic/athena/athenaservices/vault"
 )
 
-type AppConfig struct {
+type Config struct {
 	//
 	logger *slog.Logger
 	// App
@@ -57,10 +57,11 @@ type AppConfig struct {
 	SMTPUser                string `env:"SMTP_USER"`
 	SMTPUsername            string `env:"SMTP_USER"`
 	SQLitePath              string `env:"SQLITE_PATH"`
+	LocalStoragePath        string `env:"LOCAL_STORAGE_PATH"`
 }
 
-func NewConfig() AppConfig {
-	return AppConfig{
+func NewConfig() Config {
+	return Config{
 		AppDriverCache:    "memory",
 		AppDriverDatabase: "sqlite",
 		AppDriverMailer:   "smtp",
@@ -82,18 +83,18 @@ func NewConfig() AppConfig {
 	}
 }
 
-func (config AppConfig) Logger() *slog.Logger {
+func (config Config) Logger() *slog.Logger {
 	return config.logger
 }
-func (config AppConfig) Vault() vault.Vault {
+func (config Config) Vault() vault.Vault {
 	return vault.New([]byte(config.AppKey))
 }
 
-func (config AppConfig) ListenAddr() string {
+func (config Config) ListenAddr() string {
 	return fmt.Sprintf("%s:%d", config.AppHTTPHost, config.AppHTTPPort)
 }
 
-func (config AppConfig) Mailer() (mailer.Driver, error) {
+func (config Config) Mailer() (mailer.Driver, error) {
 	switch config.AppDriverMailer {
 	case "smtp":
 		return mailer.NewDriverSMTP(mailer.DriverSMTPConfig{
@@ -108,10 +109,10 @@ func (config AppConfig) Mailer() (mailer.Driver, error) {
 	return nil, fmt.Errorf("invalid mailer driver: %s", config.AppDriverMailer)
 }
 
-func (config AppConfig) Storage() (storage.Driver, error) {
+func (config Config) Storage() (storage.Driver, error) {
 	switch config.AppDriverStorage {
 	case "local":
-		return storage.NewDriverLocal("fds", vault.New([]byte(config.AppKey)))
+		return storage.NewDriverLocal(config.LocalStoragePath, config.Vault())
 	case "s3":
 		return storage.NewDriverS3(storage.S3Config{
 			Endpoint:        config.AmazonS3Endpoint,
@@ -125,7 +126,7 @@ func (config AppConfig) Storage() (storage.Driver, error) {
 	return nil, fmt.Errorf("invalid storage driver: %s", config.AppDriverStorage)
 }
 
-func (config AppConfig) Database(configFuncs ...database.ServiceConfigFunc) (*database.Service, error) {
+func (config Config) Database(configFuncs ...database.ServiceConfigFunc) (*database.Service, error) {
 	switch config.AppDriverDatabase {
 	case "sqlite":
 		return database.New(
@@ -159,7 +160,7 @@ func (config AppConfig) Database(configFuncs ...database.ServiceConfigFunc) (*da
 	return nil, fmt.Errorf("invalid database driver: %s", config.AppDriverDatabase)
 }
 
-func (config AppConfig) Cache() (cache.Driver, error) {
+func (config Config) Cache() (cache.Driver, error) {
 	switch config.AppDriverCache {
 	case "memory":
 		return cache.NewDriverMemory()
@@ -176,7 +177,7 @@ func (config AppConfig) Cache() (cache.Driver, error) {
 	return nil, fmt.Errorf("invalid cache driver: %s", config.AppDriverCache)
 }
 
-func (config AppConfig) Queue() (queue.Driver, error) {
+func (config Config) Queue() (queue.Driver, error) {
 	switch config.AppDriverQueue {
 	case "memory":
 		return queue.NewDriverMemory()

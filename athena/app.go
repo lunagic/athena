@@ -16,14 +16,14 @@ import (
 
 func NewApp(
 	ctx context.Context,
-	config AppConfig,
-	configFuncs ...AppConfigFunc,
+	config Config,
+	configFuncs ...ConfigurationFunc,
 ) (
 	*App,
 	error,
 ) {
-	// Build the service with the defaults
-	service := &App{
+	// Build the app with the defaults
+	app := &App{
 		config:   config,
 		handlers: map[string]http.Handler{},
 		logger:   slog.Default(),
@@ -39,30 +39,30 @@ func NewApp(
 
 	// Process all config functions provided by the user
 	for _, configFunc := range configFuncs {
-		if err := configFunc(service); err != nil {
+		if err := configFunc(app); err != nil {
 			return nil, err
 		}
 	}
 
-	if err := service.calculateTypeScript(); err != nil {
+	if err := app.calculateTypeScript(); err != nil {
 		return nil, err
 	}
 
-	if service.database != nil {
-		if _, err := service.database.AutoMigrate(ctx, service.databaseAutoMigrationEntities); err != nil {
+	if app.database != nil {
+		if _, err := app.database.AutoMigrate(ctx, app.databaseAutoMigrationEntities); err != nil {
 			return nil, err
 		}
 	}
 
-	if err := service.buildHandler(); err != nil {
+	if err := app.buildHandler(); err != nil {
 		return nil, err
 	}
 
-	return service, nil
+	return app, nil
 }
 
 type App struct {
-	config                        AppConfig
+	config                        Config
 	httpHandler                   http.Handler
 	logger                        *slog.Logger
 	jobs                          []agenda.Job
@@ -94,20 +94,4 @@ func (app *App) Start(ctx context.Context) error {
 		Handler: app.httpHandler,
 		Addr:    app.config.ListenAddr(),
 	}).Serve(listener)
-}
-
-func (app App) Handler() http.Handler {
-	return app.httpHandler
-}
-
-func (app App) backgroundTask(ctx context.Context) error {
-	if app.jobCacheDriver == nil {
-		return nil
-	}
-
-	if len(app.jobs) == 0 {
-		return nil
-	}
-
-	return background(ctx, app.jobCacheDriver, app.jobs)
 }

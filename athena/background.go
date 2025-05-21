@@ -10,6 +10,32 @@ import (
 	"github.com/lunagic/athena/athenaservices/cache"
 )
 
+func WithBackgroundJobs(cacheDriver cache.Driver, jobs []*BackgroundJob) ConfigurationFunc {
+	return func(app *App) error {
+		app.jobs = func() []agenda.Job {
+			x := []agenda.Job{}
+			for _, j := range jobs {
+				x = append(x, j)
+			}
+			return x
+		}()
+		app.jobCacheDriver = cacheDriver
+		return nil
+	}
+}
+
+func (app App) backgroundTask(ctx context.Context) error {
+	if app.jobCacheDriver == nil {
+		return nil
+	}
+
+	if len(app.jobs) == 0 {
+		return nil
+	}
+
+	return background(ctx, app.jobCacheDriver, app.jobs)
+}
+
 type BackgroundJobActionFunc func(ctx context.Context) error
 
 func (f BackgroundJobActionFunc) Run(ctx context.Context) error {

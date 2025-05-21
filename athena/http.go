@@ -1,16 +1,22 @@
 package athena
 
-import "net/http"
+import (
+	"net/http"
+)
 
-func (service *App) buildHandler() error {
+func (app App) Handler() http.Handler {
+	return app.httpHandler
+}
+
+func (app *App) buildHandler() error {
 	mux := http.NewServeMux()
 
 	// Add all the handlers
-	for path, handler := range service.handlers {
+	for path, handler := range app.handlers {
 		mux.Handle(path, handler)
 	}
 
-	service.httpHandler = service.middlewares.Apply(mux)
+	app.httpHandler = app.middlewares.Apply(mux)
 
 	return nil
 }
