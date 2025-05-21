@@ -60,7 +60,7 @@ func RouterMiddleware(next http.Handler) http.Handler {
 		actualUsername, actualPassword, ok := r.BasicAuth()
 		if !ok || actualUsername != mockUsername || actualPassword != mockPassword {
 			w.WriteHeader(http.StatusUnauthorized)
-			w.Write([]byte(mockUnauthorizedResponse))
+			_, _ = w.Write([]byte(mockUnauthorizedResponse))
 			return
 		}
 
@@ -95,7 +95,7 @@ func TestAppStandard(t *testing.T) {
 		ctx,
 		config,
 		athena.WithHandler("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.Write([]byte(mockIndexResponse))
+			_, _ = w.Write([]byte(mockIndexResponse))
 		})),
 		athena.WithTypeScriptOutput(io.Discard, map[string]reflect.Type{}),
 		athena.WithRouter(mockRouterPrefix, Router{}, RouterMiddleware),
