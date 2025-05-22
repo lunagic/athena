@@ -57,6 +57,8 @@ github.com/gotestyourself/gotestyourself v2.2.0+incompatible h1:AQwinXlbQR2HvPjQ
 github.com/gotestyourself/gotestyourself v2.2.0+incompatible/go.mod h1:zZKM6oeNM8k+FRljX1mnzVYeS8wiGgQyvST1/GafPbY=
 github.com/lib/pq v1.10.9 h1:YXG7RB+JIjhP29X+OtkiDnYaXQwpS4JEWq7dtCCRUEw=
 github.com/lib/pq v1.10.9/go.mod h1:AlVN5x4E4T544tWzH6hKfbfQvm3HdbOxrmggDNAPY9o=
+github.com/lunagic/environment-go v0.0.1 h1:Z7vtP0GeA1O1TJLPDdOW4qZrlFX2Cc1U1TvL4hXOmLY=
+github.com/lunagic/environment-go v0.0.1/go.mod h1:sV2gWQxHu2FOcmcjsMJNtCca4arM6g8jNXNxA7gFBFw=
 github.com/lunagic/poseidon v0.0.8 h1:8R5mWwK1SvI2a+IKuGivdK5dyKlTtGYRZVgFvDNC/LI=
 github.com/lunagic/poseidon v0.0.8/go.mod h1:HjGm67QBpjE5wM0nlxV8iFTTHk2qU49NLnpQnIO17+U=
 github.com/lunagic/typescript-go v0.0.1 h1:DQHxxXN6yBBq8dh/3vMrTPVggr5fJg8TWMDrq8bH7S8=

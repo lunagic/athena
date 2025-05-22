@@ -118,7 +118,7 @@ func TestAppEmpty(t *testing.T) {
 
 	app, err := athena.NewApp(
 		ctx,
-		athena.NewConfig(),
+		athena.NewDefaultConfig(),
 	)
 	assert.NilError(t, err)
 
@@ -174,7 +174,7 @@ func (router Router) MyInformation(user User, userRequest UserRequest) (User, er
 func TestAppStandard(t *testing.T) {
 	ctx := t.Context()
 
-	config := athena.NewConfig()
+	config := athena.NewDefaultConfig()
 	config.SQLitePath = fmt.Sprintf("%s/database.sqlite", t.TempDir())
 
 	databaseService, err := config.Database()

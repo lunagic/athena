@@ -10,6 +10,7 @@ import (
 	"github.com/lunagic/athena/athenaservices/queue"
 	"github.com/lunagic/athena/athenaservices/storage"
 	"github.com/lunagic/athena/athenaservices/vault"
+	"github.com/lunagic/environment-go/environment"
 )
 
 type Config struct {
@@ -60,7 +61,7 @@ type Config struct {
 	LocalStoragePath        string `env:"LOCAL_STORAGE_PATH"`
 }
 
-func NewConfig() Config {
+func NewDefaultConfig() Config {
 	return Config{
 		AppDriverCache:    "memory",
 		AppDriverDatabase: "sqlite",
@@ -81,6 +82,15 @@ func NewConfig() Config {
 		SMTPPort:          1025,
 		SQLitePath:        "database.sqlite",
 	}
+}
+
+func NewConfig() (Config, error) {
+	config := NewDefaultConfig()
+	if err := environment.New().Decode(&config); err != nil {
+		return Config{}, err
+	}
+
+	return config, nil
 }
 
 func (config Config) Logger() *slog.Logger {

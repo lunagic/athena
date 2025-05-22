@@ -8,6 +8,7 @@ require (
 	github.com/go-sql-driver/mysql v1.9.2
 	github.com/google/uuid v1.6.0
 	github.com/lib/pq v1.10.9
+	github.com/lunagic/environment-go v0.0.1
 	github.com/lunagic/poseidon v0.0.8
 	github.com/lunagic/typescript-go v0.0.1
 	github.com/mattn/go-sqlite3 v1.14.28

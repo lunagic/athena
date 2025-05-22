@@ -2,17 +2,19 @@ package athena
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
-	"net"
 	"net/http"
 	"reflect"
 
-	"github.com/lunagic/athena/athena/internal/agenda"
+	"github.com/google/uuid"
 	"github.com/lunagic/athena/athenaservices/cache"
 	"github.com/lunagic/athena/athenaservices/database"
 	"github.com/lunagic/poseidon/poseidon"
 )
+
+type AppBuilder interface {
+	BuildApp(ctx context.Context) (*App, error)
+}
 
 func NewApp(
 	ctx context.Context,
@@ -24,9 +26,10 @@ func NewApp(
 ) {
 	// Build the app with the defaults
 	app := &App{
-		config:   config,
-		handlers: map[string]http.Handler{},
-		logger:   slog.Default(),
+		instanceUUID: uuid.NewString(),
+		config:       config,
+		handlers:     map[string]http.Handler{},
+		logger:       slog.Default(),
 		typeScript: typeScriptConfig{
 			typesMap:              map[string]reflect.Type{},
 			argumentTypesToIgnore: map[reflect.Type]bool{},
@@ -54,19 +57,15 @@ func NewApp(
 		}
 	}
 
-	if err := app.buildHandler(); err != nil {
-		return nil, err
-	}
-
 	return app, nil
 }
 
 type App struct {
+	instanceUUID                  string
 	config                        Config
-	httpHandler                   http.Handler
 	logger                        *slog.Logger
-	jobs                          []agenda.Job
-	jobCacheDriver                cache.Driver
+	jobsCacheService              cache.Driver
+	jobs                          []BackgroundJob
 	typeScript                    typeScriptConfig
 	autoRouter                    autoRouterConfig
 	databaseAutoMigrationEntities []database.Entity
@@ -76,22 +75,19 @@ type App struct {
 }
 
 func (app *App) Start(ctx context.Context) error {
-	go func(ctx context.Context) {
-		_ = agenda.EverySecond(ctx, app.backgroundTask)
-	}(ctx)
+	if err := app.Background(ctx); err != nil {
+		return err
+	}
 
-	listener, err := net.Listen("tcp", app.config.ListenAddr())
+	return app.Serve(ctx)
+}
+
+// Start background tasks and serve the application over HTTP
+func Run(ctx context.Context, appBuilder AppBuilder) error {
+	app, err := appBuilder.BuildApp(ctx)
 	if err != nil {
 		return err
 	}
 
-	app.logger.Info(
-		"Server Listen on HTTP",
-		"addr", fmt.Sprintf("http://%s", listener.Addr().String()),
-	)
-
-	return (&http.Server{
-		Handler: app.httpHandler,
-		Addr:    app.config.ListenAddr(),
-	}).Serve(listener)
+	return app.Start(ctx)
 }
