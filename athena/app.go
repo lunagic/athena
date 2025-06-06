@@ -13,7 +13,7 @@ import (
 )
 
 type AppBuilder interface {
-	BuildApp(ctx context.Context) (*App, error)
+	Build(ctx context.Context) (*App, error)
 }
 
 func NewApp(
@@ -35,8 +35,18 @@ func NewApp(
 			argumentTypesToIgnore: map[reflect.Type]bool{},
 		},
 		autoRouter: autoRouterConfig{
-			argumentMapping: map[reflect.Type]func(w http.ResponseWriter, r *http.Request) (reflect.Value, error){},
-			returnMapping:   map[reflect.Type]func(w http.ResponseWriter, r *http.Request, value reflect.Value){},
+			argumentMapping: map[reflect.Type]func(w http.ResponseWriter, r *http.Request) (reflect.Value, error){
+				// Add some default argument mappings
+				reflect.TypeFor[context.Context](): func(w http.ResponseWriter, r *http.Request) (reflect.Value, error) {
+					return reflect.ValueOf(r.Context()), nil
+				},
+				reflect.TypeFor[http.ResponseWriter](): func(w http.ResponseWriter, r *http.Request) (reflect.Value, error) {
+					return reflect.ValueOf(w), nil
+				},
+				reflect.TypeFor[*http.Request](): func(w http.ResponseWriter, r *http.Request) (reflect.Value, error) {
+					return reflect.ValueOf(r), nil
+				},
+			},
 		},
 	}
 
@@ -83,8 +93,8 @@ func (app *App) Start(ctx context.Context) error {
 }
 
 // Start background tasks and serve the application over HTTP
-func Run(ctx context.Context, appBuilder AppBuilder) error {
-	app, err := appBuilder.BuildApp(ctx)
+func Run(ctx context.Context, builder AppBuilder) error {
+	app, err := builder.Build(ctx)
 	if err != nil {
 		return err
 	}

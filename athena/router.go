@@ -1,11 +1,9 @@
 package athena
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"reflect"
 
@@ -13,7 +11,16 @@ import (
 	"github.com/lunagic/typescript-go/typescript"
 )
 
-func WithRouter[T any](prefix string, router T, middlewares ...poseidon.Middleware) ConfigurationFunc {
+type Validator interface {
+	Validate(r *http.Request) error
+}
+
+func WithRouter[T any](
+	prefix string,
+	router T,
+	errorHandler func(w http.ResponseWriter, r *http.Request, err error),
+	middlewares ...poseidon.Middleware,
+) ConfigurationFunc {
 	return func(app *App) error {
 		app.autoRouter.Type = reflect.TypeFor[T]()
 		app.autoRouter.Prefix = prefix
@@ -38,22 +45,10 @@ func WithRouter[T any](prefix string, router T, middlewares ...poseidon.Middlewa
 					for inIndex := range methodDef.Type.NumIn() {
 						inType := methodDef.Type.In(inIndex)
 
+						// For struct methods (compared to interface methods),
+						// index 0 is the receiver. The "actual" parameters you pass
+						// when calling the method start at index 1.
 						if inType == app.autoRouter.Type {
-							continue
-						}
-
-						if inType.Implements(reflect.TypeFor[http.ResponseWriter]()) {
-							in = append(in, reflect.ValueOf(w))
-							continue
-						}
-
-						if inType == reflect.TypeFor[*http.Request]() {
-							in = append(in, reflect.ValueOf(r))
-							continue
-						}
-
-						if inType == reflect.TypeFor[context.Context]() {
-							in = append(in, reflect.ValueOf(r.Context()))
 							continue
 						}
 
@@ -70,10 +65,18 @@ func WithRouter[T any](prefix string, router T, middlewares ...poseidon.Middlewa
 						if r.Method == http.MethodPost && methodDef.Type.In(inIndex) != reflect.TypeFor[any]() {
 							payload := reflect.New(methodDef.Type.In(inIndex)).Interface()
 							if err := json.NewDecoder(r.Body).Decode(payload); err != nil {
-								log.Printf("MagicRouter: json decoding: %s", err)
-								http.NotFound(w, r)
+								errorHandler(w, r, err)
 								return
 							}
+
+							payloadThatCanBeValidated, ok := payload.(Validator)
+							if ok {
+								if err := payloadThatCanBeValidated.Validate(r); err != nil {
+									errorHandler(w, r, err)
+									return
+								}
+							}
+
 							in = append(in, reflect.ValueOf(payload).Elem())
 							continue
 						}
@@ -82,24 +85,21 @@ func WithRouter[T any](prefix string, router T, middlewares ...poseidon.Middlewa
 					}
 
 					outArgs := method.Call(in)
-					for outIndex := methodDef.Type.NumOut() - 1; outIndex >= 0; outIndex-- {
-						out := outArgs[outIndex]
-						outType := methodDef.Type.Out(outIndex)
-
-						overrideFunc, found := app.autoRouter.returnMapping[outType]
-						if found {
-							trackableWriter := poseidon.NewResponseWriter(w)
-							overrideFunc(trackableWriter, r, out)
-							// If the overrideFunc has written a response we should not continue
-							if trackableWriter.Written() {
-								return
-							}
-							continue
+					if len(outArgs) > 1 {
+						errorValue := outArgs[1]
+						errorType := methodDef.Type.Out(1)
+						if errorType != reflect.TypeFor[error]() {
+							panic("second return type must be error")
 						}
-
-						poseidon.RespondJSON(w, http.StatusOK, out.Interface())
-						return
+						errAny := errorValue.Interface()
+						if errAny != nil {
+							errorHandler(w, r, errAny.(error))
+							return
+						}
 					}
+
+					poseidon.RespondJSON(w, http.StatusOK, outArgs[0].Interface())
+
 				}),
 			),
 		)(app)
@@ -118,28 +118,6 @@ func WithRouterArgumentProvider[T any](customArgumentProvider func(w http.Respon
 			result, err := customArgumentProvider(w, r)
 
 			return reflect.ValueOf(result), err
-		}
-
-		return nil
-	}
-}
-
-func WithRouterReturnProvider[T any](customReturnProvider func(w http.ResponseWriter, r *http.Request, value T)) ConfigurationFunc {
-	return func(app *App) error {
-		newType := reflect.TypeFor[T]()
-		if _, found := app.autoRouter.argumentMapping[newType]; found {
-			return errors.New("duplicate CustomReturnProvider type, it was already registered")
-		}
-
-		app.typeScript.argumentTypesToIgnore[newType] = true
-		app.autoRouter.returnMapping[newType] = func(w http.ResponseWriter, r *http.Request, value reflect.Value) {
-			var typedValue T
-			i := value.Interface()
-			if i != nil {
-				typedValue = i.(T)
-			}
-
-			customReturnProvider(w, r, typedValue)
 		}
 
 		return nil
@@ -176,14 +154,6 @@ func (app *App) routerTypeScriptRoutes() map[string]typescript.Route {
 					continue
 				}
 
-				if in.Implements(reflect.TypeFor[http.ResponseWriter]()) {
-					continue
-				}
-
-				if in == reflect.TypeFor[*http.Request]() {
-					continue
-				}
-
 				httpMethod = http.MethodPost
 				httpRequest = method.Type.In(inIndex)
 				break
@@ -207,7 +177,6 @@ type autoRouterConfig struct {
 	Prefix          string
 	Type            reflect.Type
 	argumentMapping map[reflect.Type]func(w http.ResponseWriter, r *http.Request) (reflect.Value, error)
-	returnMapping   map[reflect.Type]func(w http.ResponseWriter, r *http.Request, value reflect.Value)
 }
 
 func (config autoRouterConfig) Enabled() bool {

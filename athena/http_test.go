@@ -161,11 +161,34 @@ type UserRequest struct {
 	Name string
 }
 
+func (userRequest UserRequest) Validate(r *http.Request) error {
+	if userRequest.Name == "" {
+		return UserFacingError{
+			StatusCode: http.StatusBadRequest,
+			Err:        errors.New("name can not be blank"),
+		}
+	}
+
+	return nil
+}
+
+type UserFacingError struct {
+	StatusCode int
+	Err        error
+}
+
+func (err UserFacingError) Error() string {
+	return err.Err.Error()
+}
+
 type Router struct{}
 
 func (router Router) MyInformation(user User, userRequest UserRequest) (User, error) {
 	if user.Name != userRequest.Name {
-		return User{}, errors.New("wrong user requested")
+		return User{}, UserFacingError{
+			StatusCode: http.StatusBadRequest,
+			Err:        errors.New("wrong user requested"),
+		}
 	}
 
 	return user, nil
@@ -187,18 +210,23 @@ func TestAppStandard(t *testing.T) {
 			_, _ = w.Write([]byte(mockIndexResponse))
 		})),
 		athena.WithTypeScriptOutput(io.Discard, map[string]reflect.Type{}),
-		athena.WithRouter(mockRouterPrefix, Router{}, RouterMiddleware),
+		athena.WithRouter(
+			mockRouterPrefix,
+			Router{},
+			func(w http.ResponseWriter, r *http.Request, err error) {
+				x, ok := err.(UserFacingError)
+				if ok {
+					poseidon.RespondJSON(w, x.StatusCode, x.Err.Error())
+					return
+				}
+				poseidon.RespondJSON(w, http.StatusInternalServerError, "something went wrong")
+			},
+			RouterMiddleware,
+		),
 		athena.WithRouterArgumentProvider(func(w http.ResponseWriter, r *http.Request) (User, error) {
 			return User{
 				Name: mockUsername,
 			}, nil
-		}),
-		athena.WithRouterReturnProvider(func(w http.ResponseWriter, r *http.Request, value error) {
-			if err == nil {
-				return
-			}
-
-			poseidon.RespondJSON(w, http.StatusInternalServerError, "not allowed")
 		}),
 		athena.WithDatabaseAutoMigration(databaseService, []database.Entity{
 			User{},
@@ -269,6 +297,73 @@ func TestAppStandard(t *testing.T) {
 			Body: User{
 				Name: mockUsername,
 			},
+		},
+	})
+
+	// Test Payload Decoding Error
+	testRequest(t, app, HTTPTestCase{
+		Request: HTTPTestCaseRequest{
+			Method: http.MethodPost,
+			Path:   mockRouterPrefix,
+			Query: url.Values{
+				"method": []string{
+					"MyInformation",
+				},
+			},
+			Modifier: func(request *http.Request) {
+				request.SetBasicAuth(mockUsername, mockPassword)
+			},
+			Body: nil,
+		},
+		Expected: HTTPTestCaseResponse{
+			Status: http.StatusInternalServerError,
+			Body:   "\"something went wrong\"",
+		},
+	})
+
+	// Test Payload Validation Error
+	testRequest(t, app, HTTPTestCase{
+		Request: HTTPTestCaseRequest{
+			Method: http.MethodPost,
+			Path:   mockRouterPrefix,
+			Query: url.Values{
+				"method": []string{
+					"MyInformation",
+				},
+			},
+			Modifier: func(request *http.Request) {
+				request.SetBasicAuth(mockUsername, mockPassword)
+			},
+			Body: UserRequest{
+				Name: "", // Blank on purpose
+			},
+		},
+		Expected: HTTPTestCaseResponse{
+			Status: http.StatusBadRequest,
+			Body:   "\"name can not be blank\"",
+		},
+	})
+
+	// Test Router Error
+	testRequest(t, app, HTTPTestCase{
+		Request: HTTPTestCaseRequest{
+			Method: http.MethodPost,
+			Path:   mockRouterPrefix,
+			Query: url.Values{
+				"method": []string{
+					"MyInformation",
+				},
+			},
+			Modifier: func(request *http.Request) {
+				request.SetBasicAuth(mockUsername, mockPassword)
+			},
+			Body: UserRequest{
+				Name: "unknown-user",
+			},
+		},
+		Expected: HTTPTestCaseResponse{
+			Status: http.StatusBadRequest,
+			Body:   "\"wrong user requested\"",
 		},
 	})
 }
