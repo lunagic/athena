@@ -21,4 +21,15 @@ func TestMap(t *testing.T) {
 			},
 		),
 	)
+
+	assert.DeepEqual(
+		t,
+		[]bool{},
+		athenatools.Map(
+			[]string{},
+			func(user string) bool {
+				return true
+			},
+		),
+	)
 }

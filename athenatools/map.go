@@ -1,9 +1,9 @@
 package athenatools
 
 func Map[T any, Y any](input []T, x func(T) Y) []Y {
-	result := []Y{}
-	for _, i := range input {
-		result = append(result, x(i))
+	result := make([]Y, len(input))
+	for i, value := range input {
+		result[i] = x(value)
 	}
 
 	return result

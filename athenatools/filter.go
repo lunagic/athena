@@ -1,12 +1,14 @@
 package athenatools
 
 func Filter[T any](input []T, x func(T) bool) []T {
-	result := []T{}
-	for _, i := range input {
-		if x(i) {
-			result = append(result, i)
+	result := make([]T, len(input))
+	resultIndex := 0
+	for _, value := range input {
+		if x(value) {
+			result[resultIndex] = value
+			resultIndex++
 		}
 	}
 
-	return result
+	return result[0:resultIndex]
 }
