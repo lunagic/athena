@@ -31,6 +31,7 @@ func NewApp(
 		handlers:     map[string]http.Handler{},
 		logger:       slog.Default(),
 		typeScript: typeScriptConfig{
+			namespace:             "Athena",
 			typesMap:              map[string]reflect.Type{},
 			argumentTypesToIgnore: map[reflect.Type]bool{},
 		},

@@ -7,8 +7,9 @@ import (
 	"github.com/lunagic/typescript-go/typescript"
 )
 
-func WithTypeScriptOutput(writer io.Writer, mapping map[string]reflect.Type) ConfigurationFunc {
+func WithTypeScriptOutput(namespace string, writer io.Writer, mapping map[string]reflect.Type) ConfigurationFunc {
 	return func(app *App) error {
+		app.typeScript.namespace = namespace
 		app.typeScript.fileWriter = writer
 		app.typeScript.typesMap = mapping
 
@@ -17,6 +18,7 @@ func WithTypeScriptOutput(writer io.Writer, mapping map[string]reflect.Type) Con
 }
 
 type typeScriptConfig struct {
+	namespace             string
 	fileWriter            io.Writer
 	typesMap              map[string]reflect.Type
 	argumentTypesToIgnore map[reflect.Type]bool
@@ -32,7 +34,7 @@ func (app *App) calculateTypeScript() error {
 	}
 
 	ts := typescript.New(
-		typescript.WithCustomNamespace("Athena"),
+		typescript.WithCustomNamespace(app.typeScript.namespace),
 		typescript.WithTypes(app.typeScript.typesMap),
 		typescript.WithRoutes(app.routerTypeScriptRoutes()),
 	)

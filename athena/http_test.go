@@ -209,7 +209,7 @@ func TestAppStandard(t *testing.T) {
 		athena.WithHandler("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			_, _ = w.Write([]byte(mockIndexResponse))
 		})),
-		athena.WithTypeScriptOutput(io.Discard, map[string]reflect.Type{}),
+		athena.WithTypeScriptOutput("TestingNamespace", io.Discard, map[string]reflect.Type{}),
 		athena.WithRouter(
 			mockRouterPrefix,
 			Router{},
