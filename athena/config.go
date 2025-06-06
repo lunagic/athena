@@ -3,6 +3,7 @@ package athena
 import (
 	"fmt"
 	"log/slog"
+	"testing"
 
 	"github.com/lunagic/athena/athenaservices/cache"
 	"github.com/lunagic/athena/athenaservices/database"
@@ -82,6 +83,13 @@ func NewDefaultConfig() Config {
 		SMTPPort:          1025,
 		SQLitePath:        "database.sqlite",
 	}
+}
+
+func NewTestConfig(t *testing.T) Config {
+	config := NewDefaultConfig()
+	config.SQLitePath = fmt.Sprintf("%s/database.sqlite", t.TempDir())
+
+	return config
 }
 
 func NewConfig() (Config, error) {
