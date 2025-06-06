@@ -11,7 +11,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/lunagic/athena/athenaservices/database"
-	"github.com/lunagic/athena/athenatools"
+	"github.com/lunagic/athena/athenatest"
 )
 
 func Test_DriverPostgres_17(t *testing.T) {
@@ -38,9 +38,9 @@ func setupPostgres(
 	pass := uuid.NewString()
 	user := uuid.NewString()
 
-	return athenatools.GetDockerService(
+	return athenatest.GetDockerService(
 		t,
-		athenatools.DockerServiceConfig[database.Driver]{
+		athenatest.DockerServiceConfig[database.Driver]{
 			DockerImage:    image,
 			DockerImageTag: tag,
 			InternalPort:   5432,

@@ -9,7 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/lunagic/athena/athenaservices/storage"
-	"github.com/lunagic/athena/athenatools"
+	"github.com/lunagic/athena/athenatest"
 )
 
 func Test_Driver_S3(t *testing.T) {
@@ -67,9 +67,9 @@ func Test_Driver_S3_Minio(t *testing.T) {
 	accessKeySecret := uuid.NewString()
 	bucketName := uuid.NewString()
 
-	driver := athenatools.GetDockerService(
+	driver := athenatest.GetDockerService(
 		t,
-		athenatools.DockerServiceConfig[storage.Driver]{
+		athenatest.DockerServiceConfig[storage.Driver]{
 			DockerImage:    "bitnami/minio",
 			DockerImageTag: "latest",
 			InternalPort:   9000,

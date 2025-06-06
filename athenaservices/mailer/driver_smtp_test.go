@@ -8,7 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/lunagic/athena/athenaservices/mailer"
-	"github.com/lunagic/athena/athenatools"
+	"github.com/lunagic/athena/athenatest"
 )
 
 func TestSMTP_Gmail(t *testing.T) {
@@ -38,7 +38,7 @@ func TestSMTP_Mailpit(t *testing.T) {
 	user := uuid.NewString()
 	password := uuid.NewString()
 
-	driver := athenatools.GetDockerService(t, athenatools.DockerServiceConfig[mailer.Driver]{
+	driver := athenatest.GetDockerService(t, athenatest.DockerServiceConfig[mailer.Driver]{
 		DockerImage:    "axllent/mailpit",
 		DockerImageTag: "latest",
 		InternalPort:   1025,

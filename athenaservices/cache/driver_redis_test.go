@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/lunagic/athena/athenaservices/cache"
-	"github.com/lunagic/athena/athenatools"
+	"github.com/lunagic/athena/athenatest"
 )
 
 func TestDriverRedis(t *testing.T) {
@@ -35,9 +35,9 @@ func TestDriverDragonfly(t *testing.T) {
 }
 
 func testRedisLikeCacheDrivers(t *testing.T, image string, tag string) {
-	driver := athenatools.GetDockerService(
+	driver := athenatest.GetDockerService(
 		t,
-		athenatools.DockerServiceConfig[cache.Driver]{
+		athenatest.DockerServiceConfig[cache.Driver]{
 			DockerImage:    image,
 			DockerImageTag: tag,
 			InternalPort:   6379,

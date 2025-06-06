@@ -5,15 +5,15 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/lunagic/athena/athenaservices/queue"
-	"github.com/lunagic/athena/athenatools"
+	"github.com/lunagic/athena/athenatest"
 )
 
 func TestDriverRabbitMQ(t *testing.T) {
 	user := uuid.NewString()
 	pass := uuid.NewString()
 
-	testSuite(t, athenatools.GetDockerService(t,
-		athenatools.DockerServiceConfig[queue.Driver]{
+	testSuite(t, athenatest.GetDockerService(t,
+		athenatest.DockerServiceConfig[queue.Driver]{
 			DockerImage:    "rabbitmq",
 			DockerImageTag: "3",
 			InternalPort:   5672,

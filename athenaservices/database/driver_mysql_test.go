@@ -11,7 +11,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/lunagic/athena/athenaservices/database"
-	"github.com/lunagic/athena/athenatools"
+	"github.com/lunagic/athena/athenatest"
 )
 
 func Test_DriverMySQL_8(t *testing.T) {
@@ -43,9 +43,9 @@ func setupMySQL(
 	pass := uuid.NewString()
 	user := uuid.NewString()[0:32] // MySQL can't have usernames longer than 32 characters
 
-	return athenatools.GetDockerService(
+	return athenatest.GetDockerService(
 		t,
-		athenatools.DockerServiceConfig[database.Driver]{
+		athenatest.DockerServiceConfig[database.Driver]{
 			DockerImage:    image,
 			DockerImageTag: tag,
 			InternalPort:   3306,
