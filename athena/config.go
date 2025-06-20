@@ -3,6 +3,8 @@ package athena
 import (
 	"fmt"
 	"log/slog"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/lunagic/athena/athenaservices/cache"
@@ -81,7 +83,7 @@ func NewDefaultConfig() Config {
 		RedisPort:         6379,
 		SMTPHost:          "127.0.0.1",
 		SMTPPort:          1025,
-		SQLitePath:        "database.sqlite",
+		SQLitePath:        "tmp/database.sqlite",
 	}
 }
 
@@ -147,6 +149,10 @@ func (config Config) Storage() (storage.Driver, error) {
 func (config Config) Database(configFuncs ...database.ServiceConfigFunc) (*database.Service, error) {
 	switch config.AppDriverDatabase {
 	case "sqlite":
+		if err := os.MkdirAll(filepath.Dir(config.SQLitePath), 0755); err != nil {
+			return nil, err
+		}
+
 		return database.New(
 			database.NewDriverSQLite(config.SQLitePath),
 			configFuncs...,
