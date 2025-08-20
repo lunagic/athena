@@ -2,7 +2,7 @@
 .DS_Store
 
 # Temporary Files
-/tmp/
+/.config/tmp/
 
 # Secrets
 .env.local

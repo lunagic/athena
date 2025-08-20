@@ -31,11 +31,11 @@ test: test-go
 
 test-go:
 	@go install github.com/boumenot/gocover-cobertura@latest
-	@mkdir -p tmp/coverage/go/
-	go test -cover -coverprofile tmp/coverage/go/profile.txt ./...
-	@go tool cover -func tmp/coverage/go/profile.txt | awk '/^total/{print $$1 " " $$3}'
-	@go tool cover -html tmp/coverage/go/profile.txt -o tmp/coverage/go/coverage.html
-	@gocover-cobertura < tmp/coverage/go/profile.txt > tmp/coverage/go/cobertura-coverage.xml
+	@mkdir -p .config/tmp/coverage/go/
+	go test -cover -coverprofile .config/tmp/coverage/go/profile.txt ./...
+	@go tool cover -func .config/tmp/coverage/go/profile.txt | awk '/^total/{print $$1 " " $$3}'
+	@go tool cover -html .config/tmp/coverage/go/profile.txt -o .config/tmp/coverage/go/coverage.html
+	@gocover-cobertura < .config/tmp/coverage/go/profile.txt > .config/tmp/coverage/go/cobertura-coverage.xml
 
 ## Build the project
 build:
