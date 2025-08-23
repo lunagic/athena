@@ -1,0 +1,12 @@
+{
+	"configurations": [
+		{
+			"mode": "auto",
+			"name": "Launch Main",
+			"program": ".",
+			"request": "launch",
+			"type": "go"
+		}
+	],
+	"version": "0.2.0"
+}
