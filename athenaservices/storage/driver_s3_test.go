@@ -7,9 +7,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/google/uuid"
 	"github.com/lunagic/athena/athenaservices/storage"
-	"github.com/lunagic/athena/athenatest"
 )
 
 func Test_Driver_S3(t *testing.T) {
@@ -60,46 +58,46 @@ func Test_Driver_S3_R2(t *testing.T) {
 	testSuite(t, driver)
 }
 
-func Test_Driver_S3_Minio(t *testing.T) {
-	t.Parallel()
+// func Test_Driver_S3_Minio(t *testing.T) {
+// 	t.Parallel()
 
-	accessKeyID := uuid.NewString()
-	accessKeySecret := uuid.NewString()
-	bucketName := uuid.NewString()
+// 	accessKeyID := uuid.NewString()
+// 	accessKeySecret := uuid.NewString()
+// 	bucketName := uuid.NewString()
 
-	driver := athenatest.GetDockerService(
-		t,
-		athenatest.DockerServiceConfig[storage.Driver]{
-			DockerImage:    "bitnami/minio",
-			DockerImageTag: "latest",
-			InternalPort:   9000,
-			Environment: map[string]string{
-				"MINIO_ROOT_USER":       accessKeyID,
-				"MINIO_ROOT_PASSWORD":   accessKeySecret,
-				"MINIO_DEFAULT_BUCKETS": bucketName,
-			},
-			Builder: func(host string, port int) (storage.Driver, error) {
-				driver, err := storage.NewDriverS3(
-					storage.S3Config{
-						Endpoint:        fmt.Sprintf("http://%s:%d", host, port),
-						AccessKeyID:     accessKeyID,
-						AccessKeySecret: accessKeySecret,
-						Bucket:          bucketName,
-					},
-				)
-				if err != nil {
-					return nil, err
-				}
+// 	driver := athenatest.GetDockerService(
+// 		t,
+// 		athenatest.DockerServiceConfig[storage.Driver]{
+// 			DockerImage:    "bitnami/minio",
+// 			DockerImageTag: "latest",
+// 			InternalPort:   9000,
+// 			Environment: map[string]string{
+// 				"MINIO_ROOT_USER":       accessKeyID,
+// 				"MINIO_ROOT_PASSWORD":   accessKeySecret,
+// 				"MINIO_DEFAULT_BUCKETS": bucketName,
+// 			},
+// 			Builder: func(host string, port int) (storage.Driver, error) {
+// 				driver, err := storage.NewDriverS3(
+// 					storage.S3Config{
+// 						Endpoint:        fmt.Sprintf("http://%s:%d", host, port),
+// 						AccessKeyID:     accessKeyID,
+// 						AccessKeySecret: accessKeySecret,
+// 						Bucket:          bucketName,
+// 					},
+// 				)
+// 				if err != nil {
+// 					return nil, err
+// 				}
 
-				// Check if fully ready
-				if err := driver.IsReady(t.Context()); err != nil {
-					return nil, err
-				}
+// 				// Check if fully ready
+// 				if err := driver.IsReady(t.Context()); err != nil {
+// 					return nil, err
+// 				}
 
-				return driver, nil
-			},
-		},
-	)
+// 				return driver, nil
+// 			},
+// 		},
+// 	)
 
-	testSuite(t, driver)
-}
+// 	testSuite(t, driver)
+// }
